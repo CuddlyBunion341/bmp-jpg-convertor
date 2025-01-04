@@ -2,19 +2,21 @@ use std::{fs::File, io::stdout, iter::once};
 
 fn main() {
     let file_path = "./test-files/cat.bmp";
-    let bytes = std::fs::read(file_path).unwrap();
+    let file = File::open(file_path).unwrap();
+    let mut header_bytes = [0; 50];
+    file.read(header_byes);
 
-    print_buffer(bytes);
+    print_buffer(header_bytes);
 }
 
-fn print_buffer(bytes: Vec<u8>) {
+fn print_buffer(bytes: &[u8]) {
     let string_bytes: Vec<String> = bytes.into_iter().map(|byte| to_binary(byte)).collect();
     let output_string = string_bytes.join(" ");
     print!("{}", output_string)
 }
 
-fn to_binary(decimal: u8) -> String {
-    let mut decimal = decimal;
+fn to_binary(decimal: &u8) -> String {
+    let mut decimal = decimal.clone();
     let mut digits = [0; 8];
     let mut index = 0;
 
