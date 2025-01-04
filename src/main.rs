@@ -34,10 +34,7 @@ fn to_binary(decimal: u8) -> String {
 }
 
 fn to_hex(decimal: u8) -> String {
-    let groups = [0; 2];
-
     let num1 = decimal & 0b00001111;
-    let num2 = decimal & 0b11110000;
     let num2 = decimal / 16;
 
     format!("{}{}", hex_char(num1), hex_char(num2))
