@@ -4,7 +4,30 @@ fn main() {
     let file_path = "./test-files/cat.bmp";
     let bytes = std::fs::read(file_path).unwrap();
 
+    let header_bytes: &[u8] = bytes.as_slice();
+    let header_bytes: [u8; 40] = header_bytes[0..40].try_into().expect("Incorrect length");
+
+    let parse_file = parse_file(&bytes);
+
+    // let header = parse_header(header_bytes).unwrap();
+
     print_buffer(bytes);
+}
+
+struct BMPFile {}
+
+fn parse_file(bytes: &Vec<u8>) -> Result<BMPFile, String> {
+    // https://docs.fileformat.com/image/bmp/
+    // File Header	No	14	To store general information about the bitmap image file
+    // DIB Header	No	Fixed-Size	To store detailed information about the bitmap image and define the pixel format
+    // Extra Bit Masks	Yes	12 or 16 bytes	To define the pixel format
+    // Colour Palette	Semi-optional	Variable-size	To define colours used by the bitmap image data
+    // Gap1	Yes	Variable-size	Structure alignment
+    // Pixel Array	No	Variable-size	Pixel format is defined by the DIB header or Extra bit masks.
+    // Gap2	Yes	Variable-size	Structure alignment
+    // ICC Color profile	Yes	Variable-size	To define the colour profile for colour management
+
+    Ok(BMPFile {})
 }
 
 // presentation
