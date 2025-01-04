@@ -17,12 +17,19 @@ fn main() {
 struct BMPFile {
     file_header: BitmapFileHeader,
     dib_header: DibHeader,
-    extra_bit_masks: String,
-    colour_palette: String,
-    gap1: String,
-    pixel_array: String,
-    gap2: String,
-    icc_color_profile: String,
+    _extra_bit_masks: String,
+    _colour_palette: String,
+    _gap1: String,
+    pixel_array: Vec<Pixel>,
+    _gap2: String,
+    _icc_color_profile: String,
+}
+
+struct Pixel {
+    red: u32,
+    green: u32,
+    blue: u32,
+    _alpha: u32,
 }
 
 struct DibHeader {}
@@ -30,18 +37,19 @@ struct DibHeader {}
 fn parse_file(bytes: &Vec<u8>) -> Result<BMPFile, String> {
     // https://en.wikipedia.org/wiki/BMP_file_format#File_structure
 
-    let file_header = parse_bitmap_file_header(&bytes[0..13]).unwrap(),
-    let dib_header = parse_dib_header(&bytes[14..]),
+    let file_header = parse_bitmap_file_header(&bytes[0..13]);
+    let dib_end = file_header.pixel_array_byte_offset as usize;
+    let dib_header = parse_dib_header(&bytes[14..dib_end]);
 
     Ok(BMPFile {
         file_header,
-        dib_header: parse_dib_header(),
-        extra_bit_masks: todo!(),
-        colour_palette: todo!(),
-        gap1: todo!(),
-        pixel_array: todo!(),
-        gap2: todo!(),
-        icc_color_profile: todo!(),
+        dib_header,
+        _extra_bit_masks: String::new(),
+        _colour_palette: String::new(),
+        _gap1: String::new(),
+        pixel_array: Vec::new(),
+        _gap2: String::new(),
+        _icc_color_profile: String::new(),
     })
 }
 
@@ -60,7 +68,7 @@ struct BitmapFileHeader {
     pixel_array_byte_offset: u32,
 }
 
-fn parse_bitmap_file_header(bytes: &[u8]) -> Result<BitmapFileHeader, String> {
+fn parse_bitmap_file_header(bytes: &[u8]) -> BitmapFileHeader {
     // https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header
 
     let header_field_bytes = &bytes[0..2];
@@ -68,18 +76,15 @@ fn parse_bitmap_file_header(bytes: &[u8]) -> Result<BitmapFileHeader, String> {
         panic!("Bytes not ascii!");
     }
 
-    Ok(BitmapFileHeader {
+    (BitmapFileHeader {
         header_field: BMPType::BM,
         size: 0,
         pixel_array_byte_offset: 0,
     })
 }
 
-fn parse_dib_header() -> DibHeader {
-    DibHeader {
-
-    }
-
+fn parse_dib_header(bytes: &[u8]) -> DibHeader {
+    (DibHeader {})
 }
 
 // presentation
