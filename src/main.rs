@@ -37,9 +37,9 @@ struct DibHeader {}
 fn parse_file(bytes: &Vec<u8>) -> Result<BMPFile, String> {
     // https://en.wikipedia.org/wiki/BMP_file_format#File_structure
 
-    let file_header = parse_bitmap_file_header(&bytes[0..13]);
+    let file_header = parse_bitmap_file_header(bytes[0..13].try_into().expect("err parse file_header"));
     let dib_end = file_header.pixel_array_byte_offset as usize;
-    let dib_header = parse_dib_header(&bytes[14..dib_end]);
+    let dib_header = parse_dib_header(bytes[14..dib_end].try_into().expect("err parse dib_header"));
 
     Ok(BMPFile {
         file_header,
@@ -68,7 +68,7 @@ struct BitmapFileHeader {
     pixel_array_byte_offset: u32,
 }
 
-fn parse_bitmap_file_header(bytes: &[u8]) -> BitmapFileHeader {
+fn parse_bitmap_file_header(bytes: [u8; 14]) -> BitmapFileHeader {
     // https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header
 
     let header_field_bytes = &bytes[0..2];
@@ -83,7 +83,7 @@ fn parse_bitmap_file_header(bytes: &[u8]) -> BitmapFileHeader {
     })
 }
 
-fn parse_dib_header(bytes: &[u8]) -> DibHeader {
+fn parse_dib_header(bytes: [u8; 40]) -> DibHeader {
     (DibHeader {})
 }
 
