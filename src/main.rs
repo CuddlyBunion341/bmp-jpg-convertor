@@ -37,7 +37,8 @@ struct DibHeader {}
 fn parse_file(bytes: &Vec<u8>) -> Result<BMPFile, String> {
     // https://en.wikipedia.org/wiki/BMP_file_format#File_structure
 
-    let file_header = parse_bitmap_file_header(bytes[0..13].try_into().expect("err parse file_header"));
+    let file_header =
+        parse_bitmap_file_header(bytes[0..14].try_into().expect("err parse file_header"));
     let dib_end = file_header.pixel_array_byte_offset as usize;
     let dib_header = parse_dib_header(bytes[14..dib_end].try_into().expect("err parse dib_header"));
 
@@ -76,11 +77,26 @@ fn parse_bitmap_file_header(bytes: [u8; 14]) -> BitmapFileHeader {
         panic!("Bytes not ascii!");
     }
 
+    let format = format!(
+        "{}{}",
+        repr_u8_as_ascii(header_field_bytes[0].to_be()),
+        repr_u8_as_ascii(header_field_bytes[1].to_be()),
+    );
+
+    match format.as_str() {
+        "BM" => BMPType::BM,
+        _ => panic!("Unefined format: {}", format),
+    };
+
     (BitmapFileHeader {
         header_field: BMPType::BM,
         size: 0,
         pixel_array_byte_offset: 0,
     })
+}
+
+fn repr_u8_as_ascii(digit: u8) -> char {
+    char::from_u32(digit.try_into().unwrap()).unwrap()
 }
 
 fn parse_dib_header(bytes: [u8; 40]) -> DibHeader {
