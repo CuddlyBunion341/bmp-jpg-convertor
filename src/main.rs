@@ -1,4 +1,4 @@
-use std::{fs::File, io::stdout, iter::once};
+use std::{ascii::AsciiExt, fs::File, io::stdout, iter::once};
 
 fn main() {
     let file_path = "./test-files/cat.bmp";
@@ -14,20 +14,72 @@ fn main() {
     print_buffer(bytes);
 }
 
-struct BMPFile {}
+struct BMPFile {
+    file_header: BitmapFileHeader,
+    dib_header: DibHeader,
+    extra_bit_masks: String,
+    colour_palette: String,
+    gap1: String,
+    pixel_array: String,
+    gap2: String,
+    icc_color_profile: String,
+}
+
+struct DibHeader {}
 
 fn parse_file(bytes: &Vec<u8>) -> Result<BMPFile, String> {
-    // https://docs.fileformat.com/image/bmp/
-    // File Header	No	14	To store general information about the bitmap image file
-    // DIB Header	No	Fixed-Size	To store detailed information about the bitmap image and define the pixel format
-    // Extra Bit Masks	Yes	12 or 16 bytes	To define the pixel format
-    // Colour Palette	Semi-optional	Variable-size	To define colours used by the bitmap image data
-    // Gap1	Yes	Variable-size	Structure alignment
-    // Pixel Array	No	Variable-size	Pixel format is defined by the DIB header or Extra bit masks.
-    // Gap2	Yes	Variable-size	Structure alignment
-    // ICC Color profile	Yes	Variable-size	To define the colour profile for colour management
+    // https://en.wikipedia.org/wiki/BMP_file_format#File_structure
 
-    Ok(BMPFile {})
+    let file_header = parse_bitmap_file_header(&bytes[0..13]).unwrap(),
+    let dib_header = parse_dib_header(&bytes[14..]),
+
+    Ok(BMPFile {
+        file_header,
+        dib_header: parse_dib_header(),
+        extra_bit_masks: todo!(),
+        colour_palette: todo!(),
+        gap1: todo!(),
+        pixel_array: todo!(),
+        gap2: todo!(),
+        icc_color_profile: todo!(),
+    })
+}
+
+enum BMPType {
+    BM,
+    BA,
+    CI,
+    CP,
+    IC,
+    PT,
+}
+
+struct BitmapFileHeader {
+    header_field: BMPType,
+    size: u32,
+    pixel_array_byte_offset: u32,
+}
+
+fn parse_bitmap_file_header(bytes: &[u8]) -> Result<BitmapFileHeader, String> {
+    // https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header
+
+    let header_field_bytes = &bytes[0..2];
+    if !header_field_bytes.is_ascii() {
+        panic!("Bytes not ascii!");
+    }
+
+    Ok(BitmapFileHeader {
+        header_field: BMPType::BM,
+        size: 0,
+        pixel_array_byte_offset: 0,
+    })
+}
+
+fn parse_dib_header() -> DibHeader {
+    DibHeader {
+
+    }
+
 }
 
 // presentation
