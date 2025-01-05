@@ -1,4 +1,8 @@
 impl BMPFile {
+    pub fn from_bytes(bytes: &Vec<u8>) -> Result<Self, String> {
+        parse_file(bytes)
+    }
+
     pub fn print_ascii(&self) {
         for y in 0..self.height {
             let mut row = String::new();
@@ -33,12 +37,12 @@ impl BMPFile {
 }
 
 pub struct BMPFile {
-    width: u32,
-    height: u32,
-    pixels: Vec<Pixel>,
+    pub width: u32,
+    pub height: u32,
+    pub pixels: Vec<Pixel>,
 }
 
-struct Pixel {
+pub struct Pixel {
     red: u8,
     green: u8,
     blue: u8,

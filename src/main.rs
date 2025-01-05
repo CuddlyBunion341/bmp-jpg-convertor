@@ -1,6 +1,6 @@
 use std::{ascii::AsciiExt, fs::File, io::stdout, iter::once};
 
-use bmp::parse_file;
+use bmp::BMPFile;
 
 mod bmp;
 mod jpg;
@@ -10,7 +10,6 @@ fn main() {
     let file_path = "./test-files/cat.bmp";
     let bytes = std::fs::read(file_path).unwrap();
 
-    let file = parse_file(&bytes).unwrap();
-
-    file.print_ascii();
+    let file = BMPFile::from_bytes(&bytes).unwrap();
+    let pixels = file.pixels;
 }
