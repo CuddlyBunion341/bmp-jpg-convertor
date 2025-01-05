@@ -65,7 +65,7 @@ enum BMPType {
 
 struct BitmapFileHeader {
     header_field: BMPType,
-    size: u32,
+    _size: u32,
     pixel_array_byte_offset: u32,
 }
 
@@ -88,13 +88,13 @@ fn parse_bitmap_file_header(bytes: [u8; 14]) -> BitmapFileHeader {
         _ => panic!("Unefined format: {}", format),
     };
 
-    let size_bytes: [u8; 4] = bytes[10..14].into();
-    let size = le_32(size_bytes);
+    let pixel_offset: [u8; 4] = bytes[10..14].try_into().expect("");
+    let pixel_offset = le_32(pixel_offset);
 
     (BitmapFileHeader {
         header_field: BMPType::BM,
-        size,
-        pixel_array_byte_offset: 0,
+        _size: 0,
+        pixel_array_byte_offset: pixel_offset,
     })
 }
 
