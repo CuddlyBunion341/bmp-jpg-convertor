@@ -6,28 +6,64 @@ fn main() {
 
     let file = parse_file(&bytes).unwrap();
 
-    println!("w:{} h:{}", file.width, file.height);
+    file.print_ascii();
 
     // print_buffer(bytes);
+}
+
+impl BMPFile {
+    pub fn print_ascii(&self) {
+        for y in 0..self.height {
+            let mut row = String::new();
+            for x in 0..self.width {
+                let index = y * self.height + x;
+                let pixel = &self.pixels[index as usize];
+
+                row += Self::pixel_to_ascii(&pixel).to_string().as_str();
+            }
+
+            println!("{}", row);
+        }
+    }
+
+    fn pixel_to_ascii(pixel: &Pixel) -> char {
+        let value: u8 = pixel.red / 3 + pixel.green / 3 + pixel.blue / 3;
+
+        let value = value / 32;
+
+        match value {
+            0 => ' ',
+            1 => '.',
+            2 => '_',
+            3 => 'f',
+            4 => '0',
+            5 => '$',
+            6 => '#',
+            7 => '@',
+            _ => panic!("UNKWON VLAUE")
+        }
+    }
 }
 
 struct BMPFile {
     width: u32,
     height: u32,
-    pixel_array: Vec<Pixel>,
+    pixels: Vec<Pixel>,
 }
 
 struct Pixel {
-    red: u32,
-    green: u32,
-    blue: u32,
+    red: u8,
+    green: u8,
+    blue: u8,
 }
 
 fn parse_file(bytes: &Vec<u8>) -> Result<BMPFile, String> {
     // https://en.wikipedia.org/wiki/BMP_file_format#File_structure
 
-    let width = le_32(bytes[18..(18 + 4)].try_into().expect(""));
-    let height = le_32(bytes[22..(22 + 4)].try_into().expect(""));
+    // let width = le_32(bytes[18..(18 + 4)].try_into().expect(""));
+    // let height = le_32(bytes[22..(22 + 4)].try_into().expect(""));
+    let width = 1704; // FIXME: remove hardcoding
+    let height = 2272; // FIXME: remove hardcoding
     let color_depth = le_16(bytes[28..(28 + 2)].try_into().expect(""));
 
     let pixel_offset = pixel_byte_offset(&bytes[0..14]);
@@ -35,18 +71,34 @@ fn parse_file(bytes: &Vec<u8>) -> Result<BMPFile, String> {
     Ok(BMPFile {
         width,
         height,
-        pixel_array: parse_pixel_array(&bytes[(pixel_offset as usize)..], color_depth),
+        pixels: parse_pixel_array(&bytes[(pixel_offset as usize)..], color_depth),
     })
 }
 
 fn parse_pixel_array(bytes: &[u8], color_depth: u32) -> Vec<Pixel> {
-
     if color_depth != 32 {
         panic!("Unknown color depth: {}", color_depth);
     }
 
-    let pixels = Vec::new();
-        pixels
+    let mut values: Vec<(u8, u8, u8, u8)> = vec![];
+
+    for pixel_index in 0..(bytes.len() / 4) {
+        values.push((
+            bytes[pixel_index * 4 + 0],
+            bytes[pixel_index * 4 + 1],
+            bytes[pixel_index * 4 + 2],
+            bytes[pixel_index * 4 + 3],
+        ))
+    }
+
+    values
+        .into_iter()
+        .map(|tuple| {
+            let (red, green, blue, _alpha) = tuple;
+
+            Pixel { red, green, blue }
+        })
+        .collect()
 }
 
 fn pixel_byte_offset(bytes: &[u8]) -> u32 {
@@ -57,7 +109,11 @@ fn pixel_byte_offset(bytes: &[u8]) -> u32 {
         panic!("Bytes not ascii!");
     }
 
-    let format = format!("{}{}", repr_u8_as_ascii(header_field_bytes[0].to_be()) , repr_u8_as_ascii(header_field_bytes[1].to_be()));
+    let format = format!(
+        "{}{}",
+        repr_u8_as_ascii(header_field_bytes[0].to_be()),
+        repr_u8_as_ascii(header_field_bytes[1].to_be())
+    );
 
     if format != "BM" {
         panic!("Unefined format: {}", format)
@@ -85,19 +141,11 @@ fn le_32(bytes: [u8; 4]) -> u32 {
 }
 
 fn le_16(bytes: [u8; 2]) -> u32 {
-    le_32([
-        bytes[0],
-        bytes[1],
-        0,
-        0
-    ])
+    le_32([bytes[0], bytes[1], 0, 0])
 }
 
 fn be_16(bytes: [u8; 2]) -> u32 {
-    le_16([
-        bytes[0],
-        bytes[1],
-    ])
+    le_16([bytes[0], bytes[1]])
 }
 
 #[cfg(test)]
