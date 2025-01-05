@@ -88,11 +88,12 @@ fn parse_bitmap_file_header(bytes: [u8; 14]) -> BitmapFileHeader {
         _ => panic!("Unefined format: {}", format),
     };
 
-    let size_bytes = &bytes[10..14];
+    let size_bytes: [u8; 4] = bytes[10..14].into();
+    let size = le_32(size_bytes);
 
     (BitmapFileHeader {
         header_field: BMPType::BM,
-        size: 0,
+        size,
         pixel_array_byte_offset: 0,
     })
 }
@@ -119,7 +120,7 @@ mod tests {
     #[test]
     fn test_be_32() {
         assert_eq!(
-            be_32([0b01001001, 0b10010110, 0b00000010, 0b11010010,]),
+            be_32([0b01001001, 0b10010110, 0b00000010, 0b11010010]),
             1234567890
         );
     }
@@ -127,7 +128,7 @@ mod tests {
     #[test]
     fn test_le_32() {
         assert_eq!(
-            le_32([0b11010010, 0b00000010, 0b10010110, 0b01001001,]),
+            le_32([0b11010010, 0b00000010, 0b10010110, 0b01001001]),
             1234567890
         );
     }
