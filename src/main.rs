@@ -4,72 +4,52 @@ fn main() {
     let file_path = "./test-files/cat.bmp";
     let bytes = std::fs::read(file_path).unwrap();
 
-    let header_bytes: &[u8] = bytes.as_slice();
-    let header_bytes: [u8; 40] = header_bytes[0..40].try_into().expect("Incorrect length");
+    let file = parse_file(&bytes).unwrap();
 
-    let parse_file = parse_file(&bytes);
+    println!("w:{} h:{}", file.width, file.height);
 
-    // let header = parse_header(header_bytes).unwrap();
-
-    print_buffer(bytes);
+    // print_buffer(bytes);
 }
 
 struct BMPFile {
-    file_header: BitmapFileHeader,
-    dib_header: DibHeader,
-    _extra_bit_masks: String,
-    _colour_palette: String,
-    _gap1: String,
+    width: u32,
+    height: u32,
     pixel_array: Vec<Pixel>,
-    _gap2: String,
-    _icc_color_profile: String,
 }
 
 struct Pixel {
     red: u32,
     green: u32,
     blue: u32,
-    _alpha: u32,
 }
-
-struct DibHeader {}
 
 fn parse_file(bytes: &Vec<u8>) -> Result<BMPFile, String> {
     // https://en.wikipedia.org/wiki/BMP_file_format#File_structure
 
-    let file_header =
-        parse_bitmap_file_header(bytes[0..14].try_into().expect("err parse file_header"));
-    let dib_end = file_header.pixel_array_byte_offset as usize;
-    let dib_header = parse_dib_header(bytes[14..dib_end].try_into().expect("err parse dib_header"));
+    let width = le_32(bytes[18..(18 + 4)].try_into().expect(""));
+    let height = le_32(bytes[22..(22 + 4)].try_into().expect(""));
+    let color_depth = le_16(bytes[28..(28 + 2)].try_into().expect(""));
+
+    let pixel_offset = pixel_byte_offset(&bytes[0..14]);
 
     Ok(BMPFile {
-        file_header,
-        dib_header,
-        _extra_bit_masks: String::new(),
-        _colour_palette: String::new(),
-        _gap1: String::new(),
-        pixel_array: Vec::new(),
-        _gap2: String::new(),
-        _icc_color_profile: String::new(),
+        width,
+        height,
+        pixel_array: parse_pixel_array(&bytes[(pixel_offset as usize)..], color_depth),
     })
 }
 
-enum BMPType {
-    BM,
-    BA,
-    CI,
-    CP,
-    IC,
-    PT,
+fn parse_pixel_array(bytes: &[u8], color_depth: u32) -> Vec<Pixel> {
+
+    if color_depth != 32 {
+        panic!("Unknown color depth: {}", color_depth);
+    }
+
+    let pixels = Vec::new();
+        pixels
 }
 
-struct BitmapFileHeader {
-    header_field: BMPType,
-    _size: u32,
-    pixel_array_byte_offset: u32,
-}
-
-fn parse_bitmap_file_header(bytes: [u8; 14]) -> BitmapFileHeader {
+fn pixel_byte_offset(bytes: &[u8]) -> u32 {
     // https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header
 
     let header_field_bytes = &bytes[0..2];
@@ -77,25 +57,16 @@ fn parse_bitmap_file_header(bytes: [u8; 14]) -> BitmapFileHeader {
         panic!("Bytes not ascii!");
     }
 
-    let format = format!(
-        "{}{}",
-        repr_u8_as_ascii(header_field_bytes[0].to_be()),
-        repr_u8_as_ascii(header_field_bytes[1].to_be()),
-    );
+    let format = format!("{}{}", repr_u8_as_ascii(header_field_bytes[0].to_be()) , repr_u8_as_ascii(header_field_bytes[1].to_be()));
 
-    match format.as_str() {
-        "BM" => BMPType::BM,
-        _ => panic!("Unefined format: {}", format),
-    };
+    if format != "BM" {
+        panic!("Unefined format: {}", format)
+    }
 
     let pixel_offset: [u8; 4] = bytes[10..14].try_into().expect("");
     let pixel_offset = le_32(pixel_offset);
 
-    (BitmapFileHeader {
-        header_field: BMPType::BM,
-        _size: 0,
-        pixel_array_byte_offset: pixel_offset,
-    })
+    pixel_offset
 }
 
 fn be_32(bytes: [u8; 4]) -> u32 {
@@ -111,6 +82,22 @@ fn be_32(bytes: [u8; 4]) -> u32 {
 
 fn le_32(bytes: [u8; 4]) -> u32 {
     be_32([bytes[3], bytes[2], bytes[1], bytes[0]])
+}
+
+fn le_16(bytes: [u8; 2]) -> u32 {
+    le_32([
+        bytes[0],
+        bytes[1],
+        0,
+        0
+    ])
+}
+
+fn be_16(bytes: [u8; 2]) -> u32 {
+    le_16([
+        bytes[0],
+        bytes[1],
+    ])
 }
 
 #[cfg(test)]
@@ -138,16 +125,12 @@ fn repr_u8_as_ascii(digit: u8) -> char {
     char::from_u32(digit.try_into().unwrap()).unwrap()
 }
 
-fn parse_dib_header(bytes: [u8; 40]) -> DibHeader {
-    (DibHeader {})
-}
-
 // presentation
 
 fn print_buffer(bytes: Vec<u8>) {
     let string_bytes: Vec<String> = bytes.into_iter().map(|byte| to_hex(byte)).collect();
     let output_string = string_bytes.join(" ");
-    print!("{}", output_string)
+    println!("{}", output_string)
 }
 
 fn to_binary(decimal: u8) -> String {
