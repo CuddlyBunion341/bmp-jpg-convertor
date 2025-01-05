@@ -1,3 +1,29 @@
+pub struct Matrix {
+    width: usize,
+    height: usize,
+    data: Vec<u8>
+}
+
+impl Matrix {
+    pub fn new(width: u32, height: u32) -> Matrix {
+        Matrix {
+            width: width as usize,
+            height: height as usize,
+            data: vec!()
+        }
+    }
+
+    pub fn get(&self, x: u32, y: u32) -> u8 {
+        let index = y * (self.width as u32) + x;
+        self.data[index as usize]
+    }
+
+    pub fn set(&mut self, x: u32, y: u32, value: u8) {
+        let index = y * (self.width as u32) + x;
+        self.data[index as usize] = value;
+    }
+}
+
 fn print_buffer(bytes: Vec<u8>) {
     let string_bytes: Vec<String> = bytes.into_iter().map(|byte| to_hex(byte)).collect();
     let output_string = string_bytes.join(" ");

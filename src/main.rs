@@ -11,5 +11,6 @@ fn main() {
     let bytes = std::fs::read(file_path).unwrap();
 
     let file = BMPFile::from_bytes(&bytes).unwrap();
-    let pixels = file.pixels;
+    let jpg = jpg::JPG::encode_bmp(file);
+    jpg.print();
 }
